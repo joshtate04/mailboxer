@@ -18,7 +18,8 @@ class Mailboxer::Message < Mailboxer::Notification
       id: id,
       sent: created_at,
       body: body,
-      sender: sender.as_json
+      sender: sender.as_json,
+      sender_type: sender_type
     }
   end
 
