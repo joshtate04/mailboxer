@@ -13,6 +13,15 @@ class Mailboxer::Message < Mailboxer::Notification
 
   mount_uploader :attachment, AttachmentUploader
 
+  def as_json(options={})
+    {
+      id: id,
+      sent: created_at,
+      body: body,
+      sender: sender.as_json
+    }
+  end
+
   class << self
     #Sets the on deliver callback method.
     def on_deliver(callback_method)
@@ -45,7 +54,7 @@ class Mailboxer::Message < Mailboxer::Notification
     end
     sender_receipt
   end
-  
+
   private
     def build_receipt(receiver, mailbox_type, is_read = false)
       Mailboxer::ReceiptBuilder.new({
