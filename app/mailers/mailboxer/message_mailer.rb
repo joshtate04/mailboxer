@@ -27,7 +27,7 @@ class Mailboxer::MessageMailer < Mailboxer::BaseMailer
       return
     end
 
-    send_sms
+    Mailboxer::MessageMailer.send_sms(receiver, @link, order)
 
     set_subject(message)
     mail :to => receiver.send(Mailboxer.email_method, message),
@@ -50,7 +50,7 @@ class Mailboxer::MessageMailer < Mailboxer::BaseMailer
       return
     end
 
-    send_sms(receiver, order)
+    Mailboxer::MessageMailer.send_sms(receiver, @link, order)
 
     set_subject(message)
     mail :to => receiver.send(Mailboxer.email_method, message),
@@ -60,18 +60,18 @@ class Mailboxer::MessageMailer < Mailboxer::BaseMailer
 
   private
 
-  def send_sms(receiver, order, link)
-    if receiver.is_a? Order
-      phone_numbers = [order.order_transaction.user.phone]
-    else
-      phone_numbers = order.restaurant_location.phones.map(&:phone)
-    end
-    title = "[Platterz] Order #{order.order_number}\n\n"
-    message = "#{message.truncate(100)}\n\n"
+  def self.send_sms(receiver, order, link)
+    title = "[Platterz] Order #{order.order_number}"
+    message = "#{message.truncate(100)}"
     footer = "Respond here: #{link}"
-
-    msg_body = "#{title}#{message}#{footer}"
-
-    SmsDeviceService.get_instance.send_sms_to_single_number(msg_body, phone_numbers)
+    if receiver.is_a? Order
+      SmsDeviceService.get_instance.send_sms_to_single_number(
+        [title, message, footer].join("\n\n"),
+        receiver.phone)
+    else
+      SmsDeviceService.get_instance.send_sms_to_phone_list(
+        [title, message, footer].join("\n\n"),
+        order.restaurant_location.phones)
+    end
   end
 end
